@@ -30,7 +30,7 @@ namespace Termo.API {
                     builder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .WithOrigins("https://termo-zavadzki72.vercel.app")
+                    .WithOrigins("https://termo-zavadzki72.vercel.app", "https://termo.vercel.app")
                     .AllowCredentials();
                 });
             });
