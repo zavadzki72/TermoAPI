@@ -154,7 +154,7 @@ namespace Termo.API {
 
                 }
 
-                if(wins) {
+                if(!wins) {
                     senquencies.Add(count);
                     count = 0;
                 }

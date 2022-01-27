@@ -16,12 +16,6 @@ namespace Termo.API.Controllers {
         }
 
         [HttpGet]
-        [Route("GetWorld")]
-        public async Task<IActionResult> GetWorld() {
-            return Ok(await _worldService.GetWorld());
-        }
-
-        [HttpGet]
         [Route("GetPlayerTodayProgress")]
         public async Task<IActionResult> GetPlayerTodayProgress(string ipAdress) {
 

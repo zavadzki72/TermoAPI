@@ -25,7 +25,7 @@ namespace Termo.API {
         }
 
         #region GetWorld
-        public async Task<string> GetWorld() {
+        private async Task<string> GetWorld() {
 
             string world;
 
@@ -85,7 +85,7 @@ namespace Termo.API {
         }
 
         public bool ValidateWorldIsValid(WorldEntity world) {
-            return (world.UsedDate.Value.Date == DateTime.Now.Date);
+            return (world.UsedDate.Value.Date == DateTime.UtcNow.AddHours(-3).Date);
         }
         #endregion;
 
@@ -169,7 +169,7 @@ namespace Termo.API {
             var arrayWorldCorrect = inputWorld.ToCharArray();
             foreach(var letra in arrayWorldCorrect) {
 
-                if(WORLD_TO_DISCOVERY.Contains(letra)/* && DefineNumberLetters(letra.ToString(), _yellowLetters)*/) {
+                if(WORLD_TO_DISCOVERY.Contains(letra)) {
                     _yellowLetters.Add(index + 1, letra.ToString());
                 } else {
                     _blackLetters.Add(index + 1, letra.ToString());
@@ -211,24 +211,6 @@ namespace Termo.API {
                     }
                 }
             }
-        }
-
-        private bool DefineNumberLetters(string letra, Dictionary<int, string> letrasAmarelas) {
-
-            var stringSplit = WORLD_TO_DISCOVERY.Split(letra);
-            var quantidadeLetraNaPalavra = stringSplit.Length - 1;
-            var quantidadeLetraNaEntrada = 0;
-
-            foreach(var letraAmarela in letrasAmarelas) {
-
-                if(letraAmarela.Value.Equals(letra, StringComparison.CurrentCultureIgnoreCase)) {
-                    quantidadeLetraNaEntrada++;
-                }
-
-            }
-
-            return (quantidadeLetraNaEntrada < quantidadeLetraNaPalavra);
-
         }
 
         private async Task GenerateTryInDatabase(Try tryModel, PlayerEntity playerEntity) {
