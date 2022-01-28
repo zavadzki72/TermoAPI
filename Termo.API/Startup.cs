@@ -15,7 +15,6 @@ namespace Termo.API {
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
 
             services.AddControllers()
@@ -26,11 +25,21 @@ namespace Termo.API {
             });
 
             services.AddCors(options => {
+                options.AddPolicy("AllowOnlyMyDomains", builder => {
+                    builder
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithOrigins("https://termo-zavadzki72.vercel.app", "https://termo.vercel.app", "https://jogos.marccusz.com", "https://marccusz.com", "https://www.marccusz.com", "https://www.jogos.marccusz.com")
+                    .AllowCredentials();
+                });
+            });
+
+            services.AddCors(options => {
                 options.AddPolicy("AllowAll", builder => {
                     builder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .WithOrigins("https://termo-zavadzki72.vercel.app", "https://termo.vercel.app")
+                    .SetIsOriginAllowed(x => true)
                     .AllowCredentials();
                 });
             });
@@ -47,7 +56,6 @@ namespace Termo.API {
             services.AddScoped<IStatisticsService, StatisticsService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             if(env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
@@ -61,7 +69,12 @@ namespace Termo.API {
             app.UseRouting();
 
             app.UseAuthorization();
+
+#if DEBUG
             app.UseCors("AllowAll");
+#else
+            app.UseCors("AllowOnlyMyDomains");
+#endif
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();

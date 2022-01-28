@@ -17,6 +17,7 @@ namespace Termo.API {
         public int QuantityWinSixChance { get; set; }
         public int QuantityLoses { get; set; }
         public TimeSpan HoursToNewWorld { get; set; }
+        public string ShareText { get; set; }
 
     }
 }

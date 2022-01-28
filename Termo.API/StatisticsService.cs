@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +68,7 @@ namespace Termo.API {
             int quantityWinFiveChance = GetQuantityToWin(playerTries, 5);
             int quantityWinSixChance = GetQuantityToWin(playerTries, 6);
             int quantityLoses = GetTotalLoses(playerTries);
+            string shareStr = await GetShareString(playerTries);
 
             return new PlayerStatistic {
                 PlayerName = player.Name,
@@ -81,7 +83,8 @@ namespace Termo.API {
                 QuantityWinFiveChance = quantityWinFiveChance,
                 QuantityWinSixChance = quantityWinSixChance,
                 QuantityLoses = quantityLoses,
-                HoursToNewWorld = GetHoursToNewWorld()
+                HoursToNewWorld = GetHoursToNewWorld(),
+                ShareText = shareStr
             };
         }
 
@@ -186,6 +189,44 @@ namespace Termo.API {
 
         private TimeSpan GetHoursToNewWorld() {
             return new TimeSpan(23, 59, 59) - DateTime.Now.TimeOfDay;
+        }
+
+        private async Task<string> GetShareString(List<TryEntity> tries) {
+
+            var triesToday = tries.Where(x => x.TryDate.Date == DateTime.UtcNow.AddHours(-3).Date).OrderBy(x => x.TryDate).ToList();
+
+            if(triesToday.Count < 6 && !triesToday.Any(x => x.Success)) {
+                return string.Empty;
+            }
+
+            var quantityGames = await _dbContext.Worlds.Where(x => x.WorldStatus != Models.WorldStatusEnumerator.WATING).ToListAsync();
+
+            var qttTry = triesToday.Any(x => x.Success) ? triesToday.Count.ToString() : "X";
+
+            string initial = $"Joguei jogos.marccusz.com #{quantityGames.Count} {qttTry}/6\n\n";
+
+            foreach(var tryIndex in triesToday) {
+                char[] worldEmoji = new char[5];
+
+                var tryModel = JsonConvert.DeserializeObject<Try>(tryIndex.JsonTry);
+
+                foreach(var greenLetter in tryModel.GreenLetters) {
+                    worldEmoji[greenLetter.Key - 1] = 'V';
+                }
+
+                foreach(var greenLetter in tryModel.YellowLetters) {
+                    worldEmoji[greenLetter.Key - 1] = 'A';
+                }
+
+                foreach(var greenLetter in tryModel.BlackLetters) {
+                    worldEmoji[greenLetter.Key - 1] = 'P';
+                }
+
+                initial += $"{new string(worldEmoji)}\n";
+
+            }
+
+            return initial;
         }
 
     }
