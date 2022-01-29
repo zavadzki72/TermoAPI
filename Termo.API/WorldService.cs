@@ -58,7 +58,7 @@ namespace Termo.API {
             var world = await _dbContext.Worlds.Where(x => x.WorldStatus.Equals(WorldStatusEnumerator.WATING)).OrderBy(r => Guid.NewGuid()).FirstOrDefaultAsync();
 
             world.WorldStatus = WorldStatusEnumerator.USING;
-            world.UsedDate = DateTime.Now;
+            world.UsedDate = DateTime.UtcNow.AddHours(-3);
             await UpdateWorld(world);
 
             if(actualWorld != null) {
@@ -125,7 +125,7 @@ namespace Termo.API {
 
             var returnModel = new Try {
                 IsSucces = false,
-                DateTry = DateTime.Now,
+                DateTry = DateTime.UtcNow.AddDays(-3),
                 GreenLetters = _greenLetters,
                 YellowLetters = _yellowLetters,
                 BlackLetters = _blackLetters
@@ -150,7 +150,7 @@ namespace Termo.API {
 
             var returnModel = new Try {
                 IsSucces = true,
-                DateTry = DateTime.Now,
+                DateTry = DateTime.UtcNow.AddHours(-3),
                 GreenLetters = _greenLetters,
                 YellowLetters = _yellowLetters,
                 BlackLetters = _blackLetters
@@ -169,7 +169,7 @@ namespace Termo.API {
             var arrayWorldCorrect = inputWorld.ToCharArray();
             foreach(var letra in arrayWorldCorrect) {
 
-                if(WORLD_TO_DISCOVERY.Contains(letra)) {
+                if(WORLD_TO_DISCOVERY.Contains(letra) && DefineNumberLetters(letra.ToString(), _yellowLetters)) {
                     _yellowLetters.Add(index + 1, letra.ToString());
                 } else {
                     _blackLetters.Add(index + 1, letra.ToString());
@@ -190,27 +190,32 @@ namespace Termo.API {
 
         private void RemoveGreenLettersInYellowLetters() {
             foreach(var letraVerde in _greenLetters) {
+
                 if(_yellowLetters.Contains(letraVerde)) {
-                    _yellowLetters.Remove(letraVerde.Key);
-                }
+                    var letrasAmarelas = _yellowLetters.Where(x => x.Value.Equals(letraVerde.Value));
+                    var toRemove = letrasAmarelas.FirstOrDefault(x => x.Key == letraVerde.Key);
 
-                var stringSplit = WORLD_TO_DISCOVERY.Split(letraVerde.Value);
-                var quantidadeLetraNaPalavra = stringSplit.Length - 1;
-
-                var quantidadeLetrasAmarelas = _yellowLetters.Where(x => x.Value.Equals(letraVerde.Value)).Count();
-                var quantidadeLetrasVerde = _greenLetters.Where(x => x.Value.Equals(letraVerde.Value)).Count();
-                var quantidadeTotal = quantidadeLetrasAmarelas + quantidadeLetrasVerde;
-
-                if(quantidadeTotal > quantidadeLetraNaPalavra) {
-                    var sobrando = quantidadeTotal - quantidadeLetraNaPalavra;
-
-                    for(int i=0; i<sobrando; i++) {
-                        var toRemove = _yellowLetters.FirstOrDefault(x => x.Value.Equals(letraVerde.Value));
-                        _yellowLetters.Remove(toRemove.Key);
-                        _blackLetters.Add(toRemove.Key, toRemove.Value);
-                    }
+                    _yellowLetters.Remove(toRemove.Key);
                 }
             }
+        }
+
+        private bool DefineNumberLetters(string letra, Dictionary<int, string> letrasAmarelas) {
+
+            var stringSplit = WORLD_TO_DISCOVERY.Split(letra);
+            var quantidadeLetraNaPalavra = stringSplit.Length - 1;
+            var quantidadeLetraNaEntrada = 0;
+
+            foreach(var letraAmarela in letrasAmarelas) {
+
+                if(letraAmarela.Value.Equals(letra, StringComparison.CurrentCultureIgnoreCase)) {
+                    quantidadeLetraNaEntrada++;
+                }
+
+            }
+
+            return (quantidadeLetraNaEntrada < quantidadeLetraNaPalavra);
+
         }
 
         private async Task GenerateTryInDatabase(Try tryModel, PlayerEntity playerEntity) {
@@ -219,7 +224,7 @@ namespace Termo.API {
 
             var tryEntity = new TryEntity {
                 Success = tryModel.IsSucces,
-                TryDate = DateTime.Now,
+                TryDate = DateTime.UtcNow.AddHours(-3),
                 PlayerId = playerEntity.Id,
                 JsonTry = jsonTry
             };
@@ -266,7 +271,7 @@ namespace Termo.API {
         }
 
         public async Task<List<TryEntity>> GetTriesOfPlayerToday(PlayerEntity player) {
-            var tries = await _dbContext.Tries.Where(x => x.PlayerId == player.Id && x.TryDate.Date == DateTime.Now.Date).ToListAsync();
+            var tries = await _dbContext.Tries.Where(x => x.PlayerId == player.Id && x.TryDate.Date == DateTime.UtcNow.AddHours(-3).Date).ToListAsync();
 
             return tries;
         }
