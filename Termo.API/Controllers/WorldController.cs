@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace Termo.API.Controllers {
 
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class WorldController : ControllerBase {
 
         private readonly IWorldService _worldService;
