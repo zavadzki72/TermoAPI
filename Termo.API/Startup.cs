@@ -7,8 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System;
 using System.Text;
 using Termo.API.Database;
+using Termo.API.ExternalServices;
+using Refit;
+using Termo.API.BackgroundServices;
 
 namespace Termo.API {
     public class Startup {
@@ -71,6 +75,15 @@ namespace Termo.API {
             }, ServiceLifetime.Scoped);
 
             services.AddMemoryCache();
+
+            services
+                .AddRefitClient<IDictionaryService>()
+                .ConfigureHttpClient(x => {
+                    x.BaseAddress = new Uri("https://significado.herokuapp.com");
+                });
+
+            services.AddHostedService<QueuedHostedService>();
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
             services.AddScoped<IWorldService, WorldService>();
             services.AddScoped<IStatisticsService, StatisticsService>();

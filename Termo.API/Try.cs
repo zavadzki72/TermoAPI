@@ -8,5 +8,6 @@ namespace Termo.API {
         public Dictionary<int, string> GreenLetters { get; set; }
         public Dictionary<int, string> YellowLetters { get; set; }
         public Dictionary<int, string> BlackLetters { get; set; }
+        public string World { get; set; }
     }
 }

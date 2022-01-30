@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Termo.API.Database;
 using Termo.API.Entities;
+using Termo.API.ExternalServices;
 using Termo.API.Models;
 
 namespace Termo.API {
@@ -18,10 +19,12 @@ namespace Termo.API {
 
         private readonly ApplicationDbContext _dbContext;
         private readonly IMemoryCache _memoryCache;
+        private readonly IDictionaryService _dictionaryService;
 
-        public WorldService(ApplicationDbContext dbContext, IMemoryCache memoryCache) {
+        public WorldService(ApplicationDbContext dbContext, IMemoryCache memoryCache, IDictionaryService dictionaryService) {
             _dbContext = dbContext;
             _memoryCache = memoryCache;
+            _dictionaryService = dictionaryService;
         }
 
         #region GetWorld
@@ -134,6 +137,12 @@ namespace Termo.API {
             var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
 
             await GenerateTryInDatabase(returnModel, player);
+
+            var playerTries = await GetTriesOfPlayerToday(player);
+
+            if(playerTries != null && playerTries.Count >= NUMBER_MAX_TRIES) {
+                returnModel.World = await GetWorld();
+            }
 
             return returnModel;
         }
@@ -250,6 +259,39 @@ namespace Termo.API {
             await _dbContext.SaveChangesAsync();
 
             return player;
+        }
+
+        public async Task GenerateWorldIfIsValid(string world)
+        {
+
+            var worldMeaning = await _dictionaryService.GetWorldInDictionary(world);
+
+            if (!worldMeaning.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            var resultContent = worldMeaning.Content;
+
+            if (resultContent == null || !resultContent.Any())
+            {
+                return;
+            }
+
+            if(string.IsNullOrWhiteSpace(resultContent.First().Class))
+            {
+                return;
+            }
+
+            var worldEntity = new WorldEntity
+            {
+                Name = world,
+                WorldStatus = WorldStatusEnumerator.WATING
+            };
+
+            await _dbContext.AddAsync(worldEntity);
+            await _dbContext.SaveChangesAsync();
+
         }
         #endregion
 

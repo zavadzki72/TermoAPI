@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
+using Termo.API.BackgroundServices;
 
 namespace Termo.API.Controllers {
 
@@ -11,10 +13,14 @@ namespace Termo.API.Controllers {
 
         private readonly IWorldService _worldService;
         private readonly IStatisticsService _statisticsService;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public WorldController(IWorldService worldService, IStatisticsService statisticsService) {
+        public WorldController(IWorldService worldService, IStatisticsService statisticsService, IBackgroundTaskQueue backgroundTaskQueue, IServiceScopeFactory serviceScopeFactory) {
             _worldService = worldService;
             _statisticsService = statisticsService;
+            _backgroundTaskQueue = backgroundTaskQueue;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         [HttpGet]
@@ -44,6 +50,8 @@ namespace Termo.API.Controllers {
             }
 
             if(!(await _worldService.VerifyIdWorldExists(worldReceived))) {
+                ProccessNewWorld(worldReceived);
+
                 return BadRequest(new {
                     Key = "WORLD_DOES_NOT_EXISTS",
                     Message = $"A palavra: {worldReceived} nao existe no nosso banco de dados"
@@ -60,6 +68,16 @@ namespace Termo.API.Controllers {
 
 
             return Ok(await _worldService.ValidateWorld(worldReceived, ipAdress, playerName));
+        }
+
+        private void ProccessNewWorld(string world)
+        {
+            _backgroundTaskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var worldService = scope.ServiceProvider.GetService<IWorldService>();
+                await worldService.GenerateWorldIfIsValid(world);
+            });
         }
     }
 }
