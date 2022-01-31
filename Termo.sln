@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Termo.API", "Termo.API\Term
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Termo.Models", "Termo.Models\Termo.Models.csproj", "{962DA568-2317-4D5D-9593-F41DFF5598F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Termo.Infrastructure", "Termo.Infrastructure\Termo.Infrastructure.csproj", "{FA3F8B50-992C-408E-96EE-E7628A258FBD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{962DA568-2317-4D5D-9593-F41DFF5598F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{962DA568-2317-4D5D-9593-F41DFF5598F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{962DA568-2317-4D5D-9593-F41DFF5598F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA3F8B50-992C-408E-96EE-E7628A258FBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA3F8B50-992C-408E-96EE-E7628A258FBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA3F8B50-992C-408E-96EE-E7628A258FBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA3F8B50-992C-408E-96EE-E7628A258FBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

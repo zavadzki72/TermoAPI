@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Termo.Infrastructure\Termo.Infrastructure.csproj" />
     <ProjectReference Include="..\Termo.Models\Termo.Models.csproj" />
   </ItemGroup>
 

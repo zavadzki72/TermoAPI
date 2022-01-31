@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Termo.API.Migrations
+namespace Termo.Infrastructure.Migrations
 {
     public partial class JsonTryInTryEntity : Migration
     {

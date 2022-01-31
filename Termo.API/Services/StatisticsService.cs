@@ -1,63 +1,44 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Termo.API.Database;
 using Termo.Models;
 using Termo.Models.Entities;
-using Termo.Models.Enumerators;
+using Termo.Models.Interfaces;
 
 namespace Termo.API.Services
 {
     public class StatisticsService : IStatisticsService {
 
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IPlayerRepository _playerRepository;
+        private readonly ITryRepository _tryRepository;
+        private readonly IWorldRepository _worldRepository;
 
-        public StatisticsService(ApplicationDbContext dbContext) {
-            _dbContext = dbContext;
+        public StatisticsService(IPlayerRepository playerRepository, ITryRepository tryRepository, IWorldRepository worldRepository) {
+            _playerRepository = playerRepository;
+            _tryRepository = tryRepository;
+            _worldRepository = worldRepository;
         }
 
         public async Task<PlayerStatistic> GetPlayerStatistic(string ipAdress) {
 
-            var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.IpAdress.Equals(ipAdress));
+            var playerStatistic = new PlayerStatistic
+            {
+                HoursToNewWorld = GetHoursToNewWorld()
+            };
 
-            if(player == null) {
-                return new PlayerStatistic {
-                    TotalGames = 0,
-                    WinRate = 0,
-                    WinSequency = 0,
-                    BestSequency = 0,
-                    QuantityWinOneChance = 0,
-                    QuantityWinTwoChance = 0,
-                    QuantityWinThreeChance = 0,
-                    QuantityWinFourChance = 0,
-                    QuantityWinFiveChance = 0,
-                    QuantityWinSixChance = 0,
-                    QuantityLoses = 0,
-                    HoursToNewWorld = GetHoursToNewWorld()
-                };
+            var player = await _playerRepository.GetPlayerByIpAdress(ipAdress);
+
+            if (player == null) {
+                return playerStatistic;
             }
 
-            var playerTries = await _dbContext.Tries.Where(x => x.PlayerId == player.Id).ToListAsync();
+            var playerTries = await _tryRepository.GetTriesByPlayer(player.Id);
 
-            if(playerTries == null || !playerTries.Any()) {
-                return new PlayerStatistic {
-                    PlayerName = player.Name,
-                    TotalGames = 0,
-                    WinRate = 0,
-                    WinSequency = 0,
-                    BestSequency = 0,
-                    QuantityWinOneChance = 0,
-                    QuantityWinTwoChance = 0,
-                    QuantityWinThreeChance = 0,
-                    QuantityWinFourChance = 0,
-                    QuantityWinFiveChance = 0,
-                    QuantityWinSixChance = 0,
-                    QuantityLoses = 0,
-                    HoursToNewWorld = GetHoursToNewWorld()
-                };
+            if (playerTries == null || !playerTries.Any()) {
+                playerStatistic.PlayerName = player.Name;
+                return playerStatistic;
             }
 
             int totalGames = GetTotalGames(playerTries);
@@ -73,41 +54,40 @@ namespace Termo.API.Services
             int quantityLoses = GetTotalLoses(playerTries);
             string shareStr = await GetShareString(playerTries);
 
-            return new PlayerStatistic {
-                PlayerName = player.Name,
-                TotalGames = totalGames,
-                WinRate = winRate,
-                WinSequency = winSequency,
-                BestSequency = bestSequency,
-                QuantityWinOneChance = quantityWinOneChance,
-                QuantityWinTwoChance = quantityWinTwoChance,
-                QuantityWinThreeChance = quantityWinThreeChance,
-                QuantityWinFourChance = quantityWinFourChance,
-                QuantityWinFiveChance = quantityWinFiveChance,
-                QuantityWinSixChance = quantityWinSixChance,
-                QuantityLoses = quantityLoses,
-                HoursToNewWorld = GetHoursToNewWorld(),
-                ShareText = shareStr
-            };
+            playerStatistic.PlayerName = player.Name;
+            playerStatistic.TotalGames = totalGames;
+            playerStatistic.WinRate = winRate;
+            playerStatistic.WinSequency = winSequency;
+            playerStatistic.BestSequency = bestSequency;
+            playerStatistic.QuantityWinOneChance = quantityWinOneChance;
+            playerStatistic.QuantityWinTwoChance = quantityWinTwoChance;
+            playerStatistic.QuantityWinThreeChance = quantityWinThreeChance;
+            playerStatistic.QuantityWinFourChance = quantityWinFourChance;
+            playerStatistic.QuantityWinFiveChance = quantityWinFiveChance;
+            playerStatistic.QuantityWinSixChance = quantityWinSixChance;
+            playerStatistic.QuantityLoses = quantityLoses;
+            playerStatistic.ShareText = shareStr;
+
+            return playerStatistic;
         }
 
-        private int GetTotalGames(List<TryEntity> tries) {
+        private static int GetTotalGames(List<TryEntity> tries) {
             int quantity = tries.GroupBy(x => x.TryDate.Date).Count();
             return quantity;
         }
 
-        private int GetWinRate(List<TryEntity> tries, int totalGames) {
+        private static int GetWinRate(List<TryEntity> tries, int totalGames) {
             int quantityWins = tries.Where(x => x.Success).Count();
             int percenteWins = (int)Math.Round((double)(100 * quantityWins) / totalGames);
             return percenteWins;
         }
 
-        private int GetActualWinSequency(List<TryEntity> tries) {
+        private static int GetActualWinSequency(List<TryEntity> tries) {
             var senquencies = GetSenquencies(tries);
             return senquencies.FirstOrDefault();
         }
 
-        private int GetTotalLoses(List<TryEntity> tries) {
+        private static int GetTotalLoses(List<TryEntity> tries) {
 
             var triesByDate = tries.GroupBy(x => x.TryDate.Date).OrderBy(x => x.Key);
             int count = 0;
@@ -132,7 +112,7 @@ namespace Termo.API.Services
             return count;
         }
 
-        private int GetBestWinSequency(List<TryEntity> tries) {
+        private static int GetBestWinSequency(List<TryEntity> tries) {
             var senquencies = GetSenquencies(tries);
 
             var ret = senquencies.OrderByDescending(x => x);
@@ -140,7 +120,7 @@ namespace Termo.API.Services
             return ret.FirstOrDefault();
         }
 
-        private List<int> GetSenquencies(List<TryEntity> tries) {
+        private static List<int> GetSenquencies(List<TryEntity> tries) {
 
             List<int> senquencies = new();
             int count = 0;
@@ -169,7 +149,7 @@ namespace Termo.API.Services
             return senquencies;
         }
 
-        private int GetQuantityToWin(List<TryEntity> tries, int quantityExpected) {
+        private static int GetQuantityToWin(List<TryEntity> tries, int quantityExpected) {
 
             int count = 0;
 
@@ -190,7 +170,7 @@ namespace Termo.API.Services
             return count;
         }
 
-        private TimeSpan GetHoursToNewWorld() {
+        private static TimeSpan GetHoursToNewWorld() {
             return new TimeSpan(23, 59, 59) - DateTime.Now.TimeOfDay;
         }
 
@@ -202,7 +182,7 @@ namespace Termo.API.Services
                 return string.Empty;
             }
 
-            var quantityGames = await _dbContext.Worlds.Where(x => x.WorldStatus != WorldStatusEnumerator.WATING).ToListAsync();
+            var quantityGames = await _worldRepository.GetWorldsNotWaiting();
 
             var qttTry = triesToday.Any(x => x.Success) ? triesToday.Count.ToString() : "X";
 

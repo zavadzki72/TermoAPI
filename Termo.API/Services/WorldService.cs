@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Termo.API.Database;
 using Termo.Models;
 using Termo.Models.Entities;
 using Termo.Models.Enumerators;
 using Termo.Models.ExternalServices;
+using Termo.Models.Interfaces;
 
 namespace Termo.API.Services
 {
@@ -19,14 +19,24 @@ namespace Termo.API.Services
         private const int NUMBER_MAX_TRIES = 6;
         private string WORLD_TO_DISCOVERY;
 
-        private readonly ApplicationDbContext _dbContext;
         private readonly IMemoryCache _memoryCache;
         private readonly IDictionaryService _dictionaryService;
+        private readonly IPlayerRepository _playerRepository;
+        private readonly IWorldRepository _worldRepository;
+        private readonly ITryRepository _tryRepository;
 
-        public WorldService(ApplicationDbContext dbContext, IMemoryCache memoryCache, IDictionaryService dictionaryService) {
-            _dbContext = dbContext;
+        public WorldService(
+            IMemoryCache memoryCache, 
+            IDictionaryService dictionaryService,
+            IPlayerRepository playerRepository,
+            IWorldRepository worldRepository,
+            ITryRepository tryRepository
+        ) {
             _memoryCache = memoryCache;
             _dictionaryService = dictionaryService;
+            _playerRepository = playerRepository;
+            _worldRepository = worldRepository;
+            _tryRepository = tryRepository;
         }
 
         #region GetWorld
@@ -47,7 +57,7 @@ namespace Termo.API.Services
                 return world;
             }
 
-            var actualWorld = await _dbContext.Worlds.FirstOrDefaultAsync(x => x.WorldStatus.Equals(WorldStatusEnumerator.USING));
+            var actualWorld = await _worldRepository.GetActualWorld();
 
             if(actualWorld != null && ValidateWorldIsValid(actualWorld)) {
                 GenerateWorldCache(actualWorld);
@@ -60,15 +70,15 @@ namespace Termo.API.Services
         }
 
         private async Task<string> GetNewWorld(WorldEntity actualWorld) {
-            var world = await _dbContext.Worlds.Where(x => x.WorldStatus.Equals(WorldStatusEnumerator.WATING)).OrderBy(r => Guid.NewGuid()).FirstOrDefaultAsync();
+            var world = await _worldRepository.GetRandomWorldWithStatusWaiting();
 
             world.WorldStatus = WorldStatusEnumerator.USING;
             world.UsedDate = DateTime.UtcNow.AddHours(-3);
-            await UpdateWorld(world);
+            await _worldRepository.Update(world);
 
-            if(actualWorld != null) {
+            if (actualWorld != null) {
                 actualWorld.WorldStatus = WorldStatusEnumerator.USED;
-                await UpdateWorld(actualWorld);
+                await _worldRepository.Update(world);
             }
 
             GenerateWorldCache(world);
@@ -82,11 +92,6 @@ namespace Termo.API.Services
 
             var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromDays(1));
             _memoryCache.Set(WORLD_OF_DAY_CACHEKEY, worldJson, cacheEntryOptions);
-        }
-
-        private async Task UpdateWorld(WorldEntity world) {
-            _dbContext.Update(world);
-            await _dbContext.SaveChangesAsync();
         }
 
         public bool ValidateWorldIsValid(WorldEntity world) {
@@ -103,7 +108,7 @@ namespace Termo.API.Services
             
             inputWorld = inputWorld.ToUpper();
 
-            var worldBd = await _dbContext.Worlds.FirstOrDefaultAsync(x => x.Name.Equals(inputWorld));
+            var worldBd = await _worldRepository.GetWorldByName(inputWorld);
 
             return (worldBd != null);
         }
@@ -199,7 +204,7 @@ namespace Termo.API.Services
             }
         }
 
-        private void RemoveGreenLettersInYellowLetters() {
+        private static void RemoveGreenLettersInYellowLetters() {
             foreach(var letraVerde in _greenLetters) {
 
                 if(_yellowLetters.Contains(letraVerde)) {
@@ -240,13 +245,12 @@ namespace Termo.API.Services
                 JsonTry = jsonTry
             };
 
-            await _dbContext.AddAsync(tryEntity);
-            await _dbContext.SaveChangesAsync();
+            await _tryRepository.Add(tryEntity);
         }
 
         private async Task<PlayerEntity> GeneratePlayerIfNotExists(string ipAdress, string playerName) {
 
-            var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.IpAdress.Equals(ipAdress));
+            var player = await _playerRepository.GetPlayerByIpAdress(ipAdress);
 
             if(player != null) {
                 return player;
@@ -257,8 +261,7 @@ namespace Termo.API.Services
                 Name = (string.IsNullOrWhiteSpace(playerName)) ? "NAO_INFORMADO" : playerName
             };
 
-            await _dbContext.AddAsync(player);
-            await _dbContext.SaveChangesAsync();
+            await _playerRepository.Add(player);
 
             return player;
         }
@@ -291,9 +294,7 @@ namespace Termo.API.Services
                 WorldStatus = WorldStatusEnumerator.WATING
             };
 
-            await _dbContext.AddAsync(worldEntity);
-            await _dbContext.SaveChangesAsync();
-
+            await _worldRepository.Add(worldEntity);
         }
         #endregion
 
@@ -315,8 +316,7 @@ namespace Termo.API.Services
         }
 
         public async Task<List<TryEntity>> GetTriesOfPlayerToday(PlayerEntity player) {
-            var tries = await _dbContext.Tries.Where(x => x.PlayerId == player.Id && x.TryDate.Date == DateTime.UtcNow.AddHours(-3).Date).ToListAsync();
-
+            var tries = await _tryRepository.GetTriesByPlayerAndDate(player.Id, DateTime.UtcNow);
             return tries;
         }
         #endregion
@@ -325,11 +325,7 @@ namespace Termo.API.Services
 
         public async Task<List<Try>> GetTriesTodayPlyer(string ipAdress) {
 
-            var tries = await _dbContext.Tries
-                .Include(x => x.Player)
-                .Where(x => x.TryDate.Date == DateTime.UtcNow.AddHours(-3).Date && x.Player.IpAdress.Equals(ipAdress))
-                .OrderBy(x => x.TryDate)
-                .ToListAsync();
+            var tries = await _tryRepository.GetTriesByPlayerIpAndDateOrderingByTryDate(ipAdress, DateTime.UtcNow);
 
             if(tries == null) {
                 return null;
@@ -341,7 +337,6 @@ namespace Termo.API.Services
 
             return ret;
         }
-
 
         #endregion
 

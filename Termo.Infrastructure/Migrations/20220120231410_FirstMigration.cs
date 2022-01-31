@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace Termo.API.Migrations
+namespace Termo.Infrastructure.Migrations
 {
     public partial class FirstMigration : Migration
     {

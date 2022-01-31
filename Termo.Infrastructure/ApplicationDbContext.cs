@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Termo.Models.Entities;
 
-namespace Termo.API.Database
+namespace Termo.Infrastructure
 {
     public class ApplicationDbContext : DbContext {
 
