@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Termo.API {
+namespace Termo.Models {
     public class Try {
         public DateTime DateTry { get; set; }
         public bool IsSucces { get; set; }

@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using Termo.API.BackgroundServices;
+using Termo.Models;
 
-namespace Termo.API.Controllers {
+namespace Termo.API.Controllers
+{
 
     [ApiController]
     [Route("[controller]")]

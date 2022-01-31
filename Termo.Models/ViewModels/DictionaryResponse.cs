@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Termo.API.Models
+namespace Termo.Models.ViewModels
 {
     public class DictionaryResponse
     {

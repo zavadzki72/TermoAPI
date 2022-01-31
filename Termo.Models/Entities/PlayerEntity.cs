@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Termo.API.Entities {
+namespace Termo.Models.Entities {
     public class PlayerEntity {
 
         [Key]

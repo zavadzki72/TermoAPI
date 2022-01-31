@@ -5,9 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Termo.API.Database;
-using Termo.API.Entities;
+using Termo.Models;
+using Termo.Models.Entities;
+using Termo.Models.Enumerators;
 
-namespace Termo.API {
+namespace Termo.API.Services
+{
     public class StatisticsService : IStatisticsService {
 
         private readonly ApplicationDbContext _dbContext;
@@ -199,7 +202,7 @@ namespace Termo.API {
                 return string.Empty;
             }
 
-            var quantityGames = await _dbContext.Worlds.Where(x => x.WorldStatus != Models.WorldStatusEnumerator.WATING).ToListAsync();
+            var quantityGames = await _dbContext.Worlds.Where(x => x.WorldStatus != WorldStatusEnumerator.WATING).ToListAsync();
 
             var qttTry = triesToday.Any(x => x.Success) ? triesToday.Count.ToString() : "X";
 

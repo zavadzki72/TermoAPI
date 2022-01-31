@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Termo.API.Models;
+using Termo.Models.Enumerators;
 
-namespace Termo.API.Entities {
+namespace Termo.Models.Entities {
     public class WorldEntity {
 
         [Key]

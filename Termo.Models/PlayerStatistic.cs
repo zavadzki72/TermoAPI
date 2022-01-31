@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace Termo.API {
+namespace Termo.Models
+{
     public class PlayerStatistic {
 
         public string PlayerName { get; set; }

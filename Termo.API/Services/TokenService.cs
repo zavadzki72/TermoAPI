@@ -4,7 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Termo.API {
+namespace Termo.API.Services {
     public static class TokenService {
         public static string GenerateToken() {
             var tokenHandler = new JwtSecurityTokenHandler();

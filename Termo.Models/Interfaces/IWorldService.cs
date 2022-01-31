@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Termo.API {
+namespace Termo.Models {
     public interface IWorldService {
 
         Task<bool> VerifyIdWorldExists(string inputWorld);

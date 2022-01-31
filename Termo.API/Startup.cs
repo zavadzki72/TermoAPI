@@ -7,14 +7,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Refit;
 using System;
 using System.Text;
-using Termo.API.Database;
-using Termo.API.ExternalServices;
-using Refit;
 using Termo.API.BackgroundServices;
+using Termo.API.Database;
+using Termo.API.Services;
+using Termo.Models;
+using Termo.Models.ExternalServices;
 
-namespace Termo.API {
+namespace Termo.API
+{
     public class Startup {
         public Startup(IConfiguration configuration) {
             Configuration = configuration;
@@ -29,6 +32,26 @@ namespace Termo.API {
 
             services.AddSwaggerGen(c => {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TermoAPI", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please insert JWT with Bearer into field",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                 {
+                  new OpenApiSecurityScheme
+                  {
+                    Reference = new OpenApiReference
+                    {
+                      Type = ReferenceType.SecurityScheme,
+                      Id = "Bearer"
+                    }
+                   },
+                   Array.Empty<string>()
+                 }
+                });
             });
 
             var key = Encoding.ASCII.GetBytes("fedaf7d8863b48e197b9287d492b708e");

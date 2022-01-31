@@ -1,4 +1,4 @@
-﻿namespace Termo.API.Models {
+﻿namespace Termo.Models.ViewModels {
     public class TryResponse {
 
         public int TryQuantity { get; set; }

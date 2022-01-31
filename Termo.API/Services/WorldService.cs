@@ -6,11 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Termo.API.Database;
-using Termo.API.Entities;
-using Termo.API.ExternalServices;
-using Termo.API.Models;
+using Termo.Models;
+using Termo.Models.Entities;
+using Termo.Models.Enumerators;
+using Termo.Models.ExternalServices;
 
-namespace Termo.API {
+namespace Termo.API.Services
+{
     public class WorldService : IWorldService {
 
         private const string WORLD_OF_DAY_CACHEKEY = "WORLD_OF_DAY";

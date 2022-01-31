@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Termo.API.Entities;
+using Termo.Models.Entities;
 
-namespace Termo.API.Database {
+namespace Termo.API.Database
+{
     public class ApplicationDbContext : DbContext {
 
         public ApplicationDbContext() { }

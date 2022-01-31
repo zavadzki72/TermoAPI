@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Termo.API.Entities {
+namespace Termo.Models.Entities {
     public class TryEntity {
 
         [Key]

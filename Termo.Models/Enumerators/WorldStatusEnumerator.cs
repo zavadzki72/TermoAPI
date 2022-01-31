@@ -1,4 +1,4 @@
-﻿namespace Termo.API.Models {
+﻿namespace Termo.Models.Enumerators {
     public enum WorldStatusEnumerator {
 
         WATING=1,

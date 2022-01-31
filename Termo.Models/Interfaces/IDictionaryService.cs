@@ -1,9 +1,9 @@
 ﻿using Refit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Termo.API.Models;
+using Termo.Models.ViewModels;
 
-namespace Termo.API.ExternalServices
+namespace Termo.Models.ExternalServices
 {
     public interface IDictionaryService
     {
