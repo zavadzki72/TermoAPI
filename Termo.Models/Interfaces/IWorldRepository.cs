@@ -7,6 +7,7 @@ namespace Termo.Models.Interfaces
     public interface IWorldRepository
     {
         Task<WorldEntity> GetActualWorld();
+        Task<WorldEntity> GetLastWorldUsed();
         Task<WorldEntity> GetRandomWorldWithStatusWaiting();
         Task<WorldEntity> GetWorldByName(string worldStr);
         Task<List<WorldEntity>> GetWorldsNotWaiting();

@@ -24,19 +24,22 @@ namespace Termo.API.Services
         private readonly IPlayerRepository _playerRepository;
         private readonly IWorldRepository _worldRepository;
         private readonly ITryRepository _tryRepository;
+        private readonly IInvalidWorldRepository _invalidWorldRepository;
 
         public WorldService(
             IMemoryCache memoryCache, 
             IDictionaryService dictionaryService,
             IPlayerRepository playerRepository,
             IWorldRepository worldRepository,
-            ITryRepository tryRepository
+            ITryRepository tryRepository,
+            IInvalidWorldRepository invalidWorldRepository
         ) {
             _memoryCache = memoryCache;
             _dictionaryService = dictionaryService;
             _playerRepository = playerRepository;
             _worldRepository = worldRepository;
             _tryRepository = tryRepository;
+            _invalidWorldRepository = invalidWorldRepository;
         }
 
         #region GetWorld
@@ -132,6 +135,8 @@ namespace Termo.API.Services
             DefineYellowAndBlackLetters(inputWorld);
             DefineGreenLetters(inputWorld);
             RemoveGreenLettersInYellowLetters();
+            RemoveYellowAndBlacksLettersIfThatIsInGreenList();
+            PercorrePalavraAndVerifyQuantityLettersIsRigth(inputWorld);
 
             var returnModel = new Try {
                 IsSucces = false,
@@ -143,7 +148,7 @@ namespace Termo.API.Services
 
             var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
 
-            await GenerateTryInDatabase(returnModel, player);
+            await GenerateTryInDatabase(returnModel, player, inputWorld);
 
             var playerTries = await GetTriesOfPlayerToday(player);
 
@@ -174,7 +179,7 @@ namespace Termo.API.Services
 
             var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
 
-            await GenerateTryInDatabase(returnModel, player);
+            await GenerateTryInDatabase(returnModel, player, inputWorld);
 
             return returnModel;
         }
@@ -234,7 +239,41 @@ namespace Termo.API.Services
 
         }
 
-        private async Task GenerateTryInDatabase(Try tryModel, PlayerEntity playerEntity) {
+        private static void RemoveYellowAndBlacksLettersIfThatIsInGreenList()
+        {
+            foreach(var letrasVerde in _greenLetters)
+            {
+                _yellowLetters.Remove(letrasVerde.Key);
+                _blackLetters.Remove(letrasVerde.Key);
+            }
+        }
+
+        private void PercorrePalavraAndVerifyQuantityLettersIsRigth(string inputWorld)
+        {
+            foreach (var letter in inputWorld.ToCharArray())
+            {
+                string letraToCompare = letter.ToString();
+                var stringSplit = WORLD_TO_DISCOVERY.Split(letter);
+                var quantidadeLetraNaPalavra = stringSplit.Length - 1;
+
+                var quantidadeLetraVerde = _greenLetters.Where(x => x.Value == letraToCompare).Count();
+                var quantidadeLetraAmarelo = _yellowLetters.Where(x => x.Value == letraToCompare).Count();
+                var quantidadeLetraPreto = _blackLetters.Where(x => x.Value == letraToCompare).Count();
+                var quantidadeTotal = quantidadeLetraVerde + quantidadeLetraAmarelo + quantidadeLetraPreto;
+
+                if(quantidadeTotal != quantidadeLetraNaPalavra)
+                {
+                    var toRemove = _yellowLetters.Where(x => x.Value == letraToCompare).FirstOrDefault();
+                    if(toRemove.Value != null)
+                    {
+                        _yellowLetters.Remove(toRemove.Key);
+                        _blackLetters.TryAdd(toRemove.Key, toRemove.Value);
+                    }
+                }
+            }
+        }
+
+        private async Task GenerateTryInDatabase(Try tryModel, PlayerEntity playerEntity, string worldInput) {
 
             var jsonTry = JsonConvert.SerializeObject(tryModel);
 
@@ -242,7 +281,8 @@ namespace Termo.API.Services
                 Success = tryModel.IsSucces,
                 TryDate = DateTime.UtcNow.AddHours(-3),
                 PlayerId = playerEntity.Id,
-                JsonTry = jsonTry
+                JsonTry = jsonTry,
+                TriedWorld = worldInput
             };
 
             await _tryRepository.Add(tryEntity);
@@ -273,6 +313,7 @@ namespace Termo.API.Services
 
             if (!worldMeaning.IsSuccessStatusCode)
             {
+                await GenerateInvalidWorld(world);
                 return;
             }
 
@@ -280,11 +321,13 @@ namespace Termo.API.Services
 
             if (resultContent == null || !resultContent.Any())
             {
+                await GenerateInvalidWorld(world);
                 return;
             }
 
             if(string.IsNullOrWhiteSpace(resultContent.First().Class))
             {
+                await GenerateInvalidWorld(world);
                 return;
             }
 
@@ -295,6 +338,17 @@ namespace Termo.API.Services
             };
 
             await _worldRepository.Add(worldEntity);
+        }
+
+        private async Task GenerateInvalidWorld(string world)
+        {
+            var invalidWorld = new InvalidWorldEntity
+            {
+                CreatedAt = DateTime.Now,
+                World = world
+            };
+
+            await _invalidWorldRepository.Add(invalidWorld);
         }
         #endregion
 

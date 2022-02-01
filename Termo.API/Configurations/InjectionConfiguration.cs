@@ -19,6 +19,7 @@ namespace Termo.API.Configurations
         {
             services.AddScoped<IWorldService, WorldService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
+            services.AddScoped<ITermostatoService, TermostatoService>();
         }
 
         private static void AddRepositories(this IServiceCollection services)
@@ -26,6 +27,7 @@ namespace Termo.API.Configurations
             services.AddScoped<IWorldRepository, WorldRepository>();
             services.AddScoped<ITryRepository, TryRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();
+            services.AddScoped<IInvalidWorldRepository, InvalidWorldRepository>();
         }
     }
 }

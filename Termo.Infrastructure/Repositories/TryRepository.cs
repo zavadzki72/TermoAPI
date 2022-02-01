@@ -42,6 +42,49 @@ namespace Termo.Infrastructure.Repositories
             return playerTries;
         }
 
+        public List<IGrouping<DateTime, TryEntity>> GetTriesGroupedByTryDate()
+        {
+            var playerTries = _dbContext.Tries
+                .AsNoTracking()
+                .AsEnumerable()
+                .GroupBy(x => x.TryDate)
+                .ToList();
+
+            return playerTries;
+        }
+
+        public List<IGrouping<int, TryEntity>> GetTriesYesterday()
+        {
+            var dateToCompare = DateTime.UtcNow.AddHours(-3).AddDays(-1);
+
+            var playerTries = _dbContext.Tries
+                .Where(x => x.TryDate.Date == dateToCompare.Date)
+                .AsNoTracking()
+                .AsEnumerable()
+                .GroupBy(x => x.PlayerId)
+                .ToList();
+
+            return playerTries;
+        }
+
+        public List<Tuple<string, int>> GetMostWorldsTried()
+        {
+            var query = (
+                from tries in _dbContext.Tries
+                group tries by tries.TriedWorld into g
+                select new Tuple<string, int>(g.Key, g.Count())
+            )
+            .ToList();
+
+
+            var retorno = query
+                .OrderByDescending(x => x.Item2)
+                .Take(10)
+                .ToList();
+
+            return retorno;
+        }
+
         public async Task Add(TryEntity tryEntity)
         {
             await _dbContext.AddAsync(tryEntity);
