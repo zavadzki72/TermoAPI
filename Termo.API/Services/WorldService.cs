@@ -120,7 +120,8 @@ namespace Termo.API.Services
 
             inputWorld = inputWorld.ToUpper();
 
-            WORLD_TO_DISCOVERY = await GetWorld();
+            //WORLD_TO_DISCOVERY = await GetWorld();
+            WORLD_TO_DISCOVERY = "EXATO";
 
             _greenLetters.Clear();
             _yellowLetters.Clear();
@@ -258,8 +259,7 @@ namespace Termo.API.Services
 
                 var quantidadeLetraVerde = _greenLetters.Where(x => x.Value == letraToCompare).Count();
                 var quantidadeLetraAmarelo = _yellowLetters.Where(x => x.Value == letraToCompare).Count();
-                var quantidadeLetraPreto = _blackLetters.Where(x => x.Value == letraToCompare).Count();
-                var quantidadeTotal = quantidadeLetraVerde + quantidadeLetraAmarelo + quantidadeLetraPreto;
+                var quantidadeTotal = quantidadeLetraVerde + quantidadeLetraAmarelo;
 
                 if(quantidadeTotal != quantidadeLetraNaPalavra)
                 {
