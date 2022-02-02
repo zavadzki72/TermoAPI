@@ -120,8 +120,7 @@ namespace Termo.API.Services
 
             inputWorld = inputWorld.ToUpper();
 
-            //WORLD_TO_DISCOVERY = await GetWorld();
-            WORLD_TO_DISCOVERY = "EXATO";
+            WORLD_TO_DISCOVERY = await GetWorld();
 
             _greenLetters.Clear();
             _yellowLetters.Clear();
