@@ -13,8 +13,10 @@ namespace Termo.API.Configurations
             "https://marccusz.com",
             "https://www.marccusz.com",
             "https://www.jogos.marccusz.com",
-            "https://termo.marccusz.com",
-            "https://www.termo.marccusz.com"
+            "https://palavra.marccusz.com",
+            "https://www.palavra.marccusz.com",
+            "https://www.palavras.marccusz.com",
+            "https://palavras.marccusz.com"
         };
 
         public static void AddCorsConfiguration(this IServiceCollection services)
