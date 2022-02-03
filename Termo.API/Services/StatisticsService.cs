@@ -186,7 +186,7 @@ namespace Termo.API.Services
 
             var qttTry = triesToday.Any(x => x.Success) ? triesToday.Count.ToString() : "X";
 
-            string initial = $"Joguei jogos.marccusz.com #{quantityGames.Count} {qttTry}/6\n\n";
+            string initial = $"Joguei palavra.marccusz.com #{quantityGames.Count} {qttTry}/6\n\n";
 
             foreach(var tryIndex in triesToday) {
                 char[] worldEmoji = new char[5];
