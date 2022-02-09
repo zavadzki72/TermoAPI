@@ -260,7 +260,7 @@ namespace Termo.API.Services
                 var quantidadeLetraAmarelo = _yellowLetters.Where(x => x.Value == letraToCompare).Count();
                 var quantidadeTotal = quantidadeLetraVerde + quantidadeLetraAmarelo;
 
-                if(quantidadeTotal != quantidadeLetraNaPalavra)
+                if(quantidadeTotal > quantidadeLetraNaPalavra)
                 {
                     var toRemove = _yellowLetters.Where(x => x.Value == letraToCompare).FirstOrDefault();
                     if(toRemove.Value != null)
