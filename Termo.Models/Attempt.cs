@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 
 namespace Termo.Models {
-    public class Try {
-        public DateTime DateTry { get; set; }
+    public class Attempt {
+        public DateTime AttemptDate { get; set; }
         public bool IsSucces { get; set; }
         public Dictionary<int, string> GreenLetters { get; set; }
         public Dictionary<int, string> YellowLetters { get; set; }

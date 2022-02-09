@@ -15,13 +15,13 @@ namespace Termo.API.Services
         private const string TERMOSTATO_OF_DAY_CACHEKEY = "TERMOSTATO_OF_DAY";
 
         private readonly IMemoryCache _memoryCache;
-        private readonly ITryRepository _tryRepository;
+        private readonly IAttemptRepository _tryRepository;
         private readonly IWorldRepository _worldRepository;
         private readonly IInvalidWorldRepository _invalidWorldRepository;
 
         public TermostatoService(
             IMemoryCache memoryCache, 
-            ITryRepository tryRepository, 
+            IAttemptRepository tryRepository, 
             IWorldRepository worldRepository, 
             IInvalidWorldRepository invalidWorldRepository
         )
@@ -102,7 +102,7 @@ namespace Termo.API.Services
             return worldsNotWaiting.Count - 1;
         }
 
-        private static int GetPercentWinsFirstTime(List<IGrouping<DateTime, TryEntity>> allTriesByDate, int totalGames)
+        private static int GetPercentWinsFirstTime(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate, int totalGames)
         {
             var winsFirstTime = GetWinsFirstTime(allTriesByDate);
 
@@ -110,7 +110,7 @@ namespace Termo.API.Services
             return percentage;
         }
 
-        private static int GetPercentWins(List<IGrouping<DateTime, TryEntity>> allTriesByDate, int totalGames)
+        private static int GetPercentWins(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate, int totalGames)
         {
             var winsFirstTime = GetWins(allTriesByDate);
 
@@ -118,7 +118,7 @@ namespace Termo.API.Services
             return percentage;
         }
 
-        private static int GetWinsFirstTime(List<IGrouping<DateTime, TryEntity>> allTriesByDate)
+        private static int GetWinsFirstTime(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate)
         {
             var success = 0;
 
@@ -128,7 +128,7 @@ namespace Termo.API.Services
 
                 foreach (var tentativas in triesByPlayer)
                 {
-                    var triesOrdered = tentativas.OrderBy(x => x.TryDate);
+                    var triesOrdered = tentativas.OrderBy(x => x.AttemptDate);
                     var primeiro = triesOrdered.FirstOrDefault();
                     if (primeiro.Success)
                     {
@@ -141,7 +141,7 @@ namespace Termo.API.Services
             return success;
         }
 
-        private static int GetWins(List<IGrouping<DateTime, TryEntity>> allTriesByDate)
+        private static int GetWins(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate)
         {
             var count = 0;
 
@@ -151,7 +151,7 @@ namespace Termo.API.Services
 
                 foreach (var tentativas in triesByPlayer)
                 {
-                    var triesOrdered = tentativas.OrderBy(x => x.TryDate);
+                    var triesOrdered = tentativas.OrderBy(x => x.AttemptDate);
 
                     foreach(var tentativa in triesOrdered)
                     {
@@ -167,7 +167,7 @@ namespace Termo.API.Services
             return count;
         }
 
-        private static int GetTotalGames(List<IGrouping<DateTime, TryEntity>> allTriesByDate)
+        private static int GetTotalGames(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate)
         {
             var count = 0;
 
@@ -185,7 +185,7 @@ namespace Termo.API.Services
             return count;
         }
 
-        private static int GetTotalGamesYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetTotalGamesYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var totalGames = 0;
 
@@ -197,13 +197,13 @@ namespace Termo.API.Services
             return totalGames;
         }
 
-        private static int GetWinsFirstTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetWinsFirstTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate).FirstOrDefault();
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate).FirstOrDefault();
                 if (tentativa.Success)
                 {
                     succes++;
@@ -213,13 +213,13 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetSecondSecondTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetSecondSecondTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate);
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate);
                 var element = tentativa.ElementAtOrDefault(1);
                 if (element != null && element.Success)
                 {
@@ -230,13 +230,13 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetSecondThirdTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetSecondThirdTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate);
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate);
                 var element = tentativa.ElementAtOrDefault(2);
                 if (element != null && element.Success)
                 {
@@ -247,13 +247,13 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetSecondForthyTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetSecondForthyTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate);
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate);
                 var element = tentativa.ElementAtOrDefault(3);
                 if (element != null && element.Success)
                 {
@@ -264,13 +264,13 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetSecondFifthyTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetSecondFifthyTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate);
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate);
                 var element = tentativa.ElementAtOrDefault(4);
                 if (element != null && element.Success)
                 {
@@ -281,13 +281,13 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetSecondSixthyTimeYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetSecondSixthyTimeYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var succes = 0;
 
             foreach (var tentativas in allTriesYesterday)
             {
-                var tentativa = tentativas.OrderBy(x => x.TryDate);
+                var tentativa = tentativas.OrderBy(x => x.AttemptDate);
                 var element = tentativa.ElementAtOrDefault(5);
                 if (element != null && element.Success)
                 {
@@ -298,7 +298,7 @@ namespace Termo.API.Services
             return succes;
         }
 
-        private static int GetLosesYesterday(List<IGrouping<int, TryEntity>> allTriesYesterday)
+        private static int GetLosesYesterday(List<IGrouping<int, AttemptEntity>> allTriesYesterday)
         {
             var loses = 0;
 
@@ -323,7 +323,7 @@ namespace Termo.API.Services
             return loses;
         }
 
-        private static Dictionary<string, int> GetWorldsFirstTime(List<IGrouping<DateTime, TryEntity>> allTriesByDate)
+        private static Dictionary<string, int> GetWorldsFirstTime(List<IGrouping<DateTime, AttemptEntity>> allTriesByDate)
         {
             Dictionary<string, int> worldsFirstTime = new();
 
@@ -333,7 +333,7 @@ namespace Termo.API.Services
 
                 foreach (var tentativas in triesByPlayer)
                 {
-                    var triesOrdered = tentativas.OrderBy(x => x.TryDate);
+                    var triesOrdered = tentativas.OrderBy(x => x.AttemptDate);
                     var primeiro = triesOrdered.FirstOrDefault();
 
                     if(worldsFirstTime.TryGetValue(primeiro.TriedWorld, out var qttAtual))

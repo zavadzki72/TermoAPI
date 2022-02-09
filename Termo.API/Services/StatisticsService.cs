@@ -12,10 +12,10 @@ namespace Termo.API.Services
     public class StatisticsService : IStatisticsService {
 
         private readonly IPlayerRepository _playerRepository;
-        private readonly ITryRepository _tryRepository;
+        private readonly IAttemptRepository _tryRepository;
         private readonly IWorldRepository _worldRepository;
 
-        public StatisticsService(IPlayerRepository playerRepository, ITryRepository tryRepository, IWorldRepository worldRepository) {
+        public StatisticsService(IPlayerRepository playerRepository, IAttemptRepository tryRepository, IWorldRepository worldRepository) {
             _playerRepository = playerRepository;
             _tryRepository = tryRepository;
             _worldRepository = worldRepository;
@@ -71,25 +71,25 @@ namespace Termo.API.Services
             return playerStatistic;
         }
 
-        private static int GetTotalGames(List<TryEntity> tries) {
-            int quantity = tries.GroupBy(x => x.TryDate.Date).Count();
+        private static int GetTotalGames(List<AttemptEntity> tries) {
+            int quantity = tries.GroupBy(x => x.AttemptDate.Date).Count();
             return quantity;
         }
 
-        private static int GetWinRate(List<TryEntity> tries, int totalGames) {
+        private static int GetWinRate(List<AttemptEntity> tries, int totalGames) {
             int quantityWins = tries.Where(x => x.Success).Count();
             int percenteWins = (int)Math.Round((double)(100 * quantityWins) / totalGames);
             return percenteWins;
         }
 
-        private static int GetActualWinSequency(List<TryEntity> tries) {
+        private static int GetActualWinSequency(List<AttemptEntity> tries) {
             var senquencies = GetSenquencies(tries);
             return senquencies.FirstOrDefault();
         }
 
-        private static int GetTotalLoses(List<TryEntity> tries) {
+        private static int GetTotalLoses(List<AttemptEntity> tries) {
 
-            var triesByDate = tries.GroupBy(x => x.TryDate.Date).OrderBy(x => x.Key);
+            var triesByDate = tries.GroupBy(x => x.AttemptDate.Date).OrderBy(x => x.Key);
             int count = 0;
 
             foreach(var tryByDate in triesByDate) {
@@ -112,7 +112,7 @@ namespace Termo.API.Services
             return count;
         }
 
-        private static int GetBestWinSequency(List<TryEntity> tries) {
+        private static int GetBestWinSequency(List<AttemptEntity> tries) {
             var senquencies = GetSenquencies(tries);
 
             var ret = senquencies.OrderByDescending(x => x);
@@ -120,12 +120,12 @@ namespace Termo.API.Services
             return ret.FirstOrDefault();
         }
 
-        private static List<int> GetSenquencies(List<TryEntity> tries) {
+        private static List<int> GetSenquencies(List<AttemptEntity> tries) {
 
             List<int> senquencies = new();
             int count = 0;
 
-            var triesByDate = tries.GroupBy(x => x.TryDate.Date).OrderByDescending(x => x.Key);
+            var triesByDate = tries.GroupBy(x => x.AttemptDate.Date).OrderByDescending(x => x.Key);
 
             foreach(var tryByDate in triesByDate) {
 
@@ -149,11 +149,11 @@ namespace Termo.API.Services
             return senquencies;
         }
 
-        private static int GetQuantityToWin(List<TryEntity> tries, int quantityExpected) {
+        private static int GetQuantityToWin(List<AttemptEntity> tries, int quantityExpected) {
 
             int count = 0;
 
-            var triesByDate = tries.GroupBy(x => x.TryDate.Date).OrderByDescending(x => x.Key);
+            var triesByDate = tries.GroupBy(x => x.AttemptDate.Date).OrderByDescending(x => x.Key);
 
             foreach(var tryByDate in triesByDate) {
                 foreach(var tryModel in tryByDate) {
@@ -174,9 +174,9 @@ namespace Termo.API.Services
             return new TimeSpan(23, 59, 59) - DateTime.Now.TimeOfDay;
         }
 
-        private async Task<string> GetShareString(List<TryEntity> tries) {
+        private async Task<string> GetShareString(List<AttemptEntity> tries) {
 
-            var triesToday = tries.Where(x => x.TryDate.Date == DateTime.UtcNow.AddHours(-3).Date).OrderBy(x => x.TryDate).ToList();
+            var triesToday = tries.Where(x => x.AttemptDate.Date == DateTime.UtcNow.AddHours(-3).Date).OrderBy(x => x.AttemptDate).ToList();
 
             if(triesToday.Count < 6 && !triesToday.Any(x => x.Success)) {
                 return string.Empty;
@@ -191,7 +191,7 @@ namespace Termo.API.Services
             foreach(var tryIndex in triesToday) {
                 char[] worldEmoji = new char[5];
 
-                var tryModel = JsonConvert.DeserializeObject<Try>(tryIndex.JsonTry);
+                var tryModel = JsonConvert.DeserializeObject<Attempt>(tryIndex.AttemptTry);
 
                 foreach(var greenLetter in tryModel.GreenLetters) {
                     worldEmoji[greenLetter.Key - 1] = 'V';

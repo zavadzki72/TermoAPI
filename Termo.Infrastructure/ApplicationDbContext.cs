@@ -11,7 +11,7 @@ namespace Termo.Infrastructure
 
         public virtual DbSet<PlayerEntity> Players { get; set; }
         public virtual DbSet<WorldEntity> Worlds { get; set; }
-        public virtual DbSet<TryEntity> Tries { get; set; }
+        public virtual DbSet<AttemptEntity> Tries { get; set; }
         public virtual DbSet<InvalidWorldEntity> InvalidWorlds { get; set; }
 
     }

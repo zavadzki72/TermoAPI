@@ -1,8 +1,8 @@
 ﻿namespace Termo.Models.ViewModels {
-    public class TryResponse {
+    public class AttemptResponse {
 
         public int TryQuantity { get; set; }
-        public Try Try { get; set; }
+        public Attempt Attempt { get; set; }
 
     }
 }

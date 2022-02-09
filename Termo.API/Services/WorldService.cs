@@ -10,6 +10,7 @@ using Termo.Models.Entities;
 using Termo.Models.Enumerators;
 using Termo.Models.ExternalServices;
 using Termo.Models.Interfaces;
+using Termo.Models.ViewModels;
 
 namespace Termo.API.Services
 {
@@ -23,7 +24,7 @@ namespace Termo.API.Services
         private readonly IDictionaryService _dictionaryService;
         private readonly IPlayerRepository _playerRepository;
         private readonly IWorldRepository _worldRepository;
-        private readonly ITryRepository _tryRepository;
+        private readonly IAttemptRepository _tryRepository;
         private readonly IInvalidWorldRepository _invalidWorldRepository;
 
         public WorldService(
@@ -31,7 +32,7 @@ namespace Termo.API.Services
             IDictionaryService dictionaryService,
             IPlayerRepository playerRepository,
             IWorldRepository worldRepository,
-            ITryRepository tryRepository,
+            IAttemptRepository tryRepository,
             IInvalidWorldRepository invalidWorldRepository
         ) {
             _memoryCache = memoryCache;
@@ -116,9 +117,9 @@ namespace Termo.API.Services
             return (worldBd != null);
         }
 
-        public async Task<Try> ValidateWorld(string inputWorld, string ipAdress, string playerName) {
+        public async Task<Attempt> ValidateWorld(ValidateWorldViewModel validateWorldViewModel) {
 
-            inputWorld = inputWorld.ToUpper();
+            var inputWorld = validateWorldViewModel.WorldReceived.ToUpper();
 
             WORLD_TO_DISCOVERY = await GetWorld();
 
@@ -126,7 +127,7 @@ namespace Termo.API.Services
             _yellowLetters.Clear();
             _blackLetters.Clear();
 
-            var tryEqual = await ValidateIfIsEqual(inputWorld, ipAdress, playerName);
+            var tryEqual = await ValidateIfIsEqual(inputWorld, validateWorldViewModel.IpAdress);
 
             if(tryEqual != null) {
                 return tryEqual;
@@ -138,15 +139,15 @@ namespace Termo.API.Services
             RemoveYellowAndBlacksLettersIfThatIsInGreenList();
             PercorrePalavraAndVerifyQuantityLettersIsRigth(inputWorld);
 
-            var returnModel = new Try {
+            var returnModel = new Attempt {
                 IsSucces = false,
-                DateTry = DateTime.UtcNow.AddDays(-3),
+                AttemptDate = DateTime.UtcNow.AddDays(-3),
                 GreenLetters = _greenLetters,
                 YellowLetters = _yellowLetters,
                 BlackLetters = _blackLetters
             };
 
-            var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
+            var player = await GeneratePlayerIfNotExists(validateWorldViewModel.IpAdress);
 
             await GenerateTryInDatabase(returnModel, player, inputWorld);
 
@@ -159,7 +160,7 @@ namespace Termo.API.Services
             return returnModel;
         }
 
-        private async Task<Try> ValidateIfIsEqual(string inputWorld, string ipAdress, string playerName) {
+        private async Task<Attempt> ValidateIfIsEqual(string inputWorld, string ipAdress) {
 
             if(!inputWorld.Equals(WORLD_TO_DISCOVERY, StringComparison.CurrentCultureIgnoreCase)) {
                 return null;
@@ -169,15 +170,15 @@ namespace Termo.API.Services
                 _greenLetters.Add(i+1, inputWorld[i].ToString());
             }
 
-            var returnModel = new Try {
+            var returnModel = new Attempt {
                 IsSucces = true,
-                DateTry = DateTime.UtcNow.AddHours(-3),
+                AttemptDate = DateTime.UtcNow.AddHours(-3),
                 GreenLetters = _greenLetters,
                 YellowLetters = _yellowLetters,
                 BlackLetters = _blackLetters
             };
 
-            var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
+            var player = await GeneratePlayerIfNotExists(ipAdress);
 
             await GenerateTryInDatabase(returnModel, player, inputWorld);
 
@@ -272,22 +273,22 @@ namespace Termo.API.Services
             }
         }
 
-        private async Task GenerateTryInDatabase(Try tryModel, PlayerEntity playerEntity, string worldInput) {
+        private async Task GenerateTryInDatabase(Attempt tryModel, PlayerEntity playerEntity, string worldInput) {
 
             var jsonTry = JsonConvert.SerializeObject(tryModel);
 
-            var tryEntity = new TryEntity {
+            var tryEntity = new AttemptEntity {
                 Success = tryModel.IsSucces,
-                TryDate = DateTime.UtcNow.AddHours(-3),
+                AttemptDate = DateTime.UtcNow.AddHours(-3),
                 PlayerId = playerEntity.Id,
-                JsonTry = jsonTry,
+                AttemptTry = jsonTry,
                 TriedWorld = worldInput
             };
 
             await _tryRepository.Add(tryEntity);
         }
 
-        private async Task<PlayerEntity> GeneratePlayerIfNotExists(string ipAdress, string playerName) {
+        private async Task<PlayerEntity> GeneratePlayerIfNotExists(string ipAdress) {
 
             var player = await _playerRepository.GetPlayerByIpAdress(ipAdress);
 
@@ -297,7 +298,7 @@ namespace Termo.API.Services
 
             player = new PlayerEntity {
                 IpAdress = ipAdress,
-                Name = (string.IsNullOrWhiteSpace(playerName)) ? "NAO_INFORMADO" : playerName
+                Name = "NAO_INFORMADO"
             };
 
             await _playerRepository.Add(player);
@@ -352,8 +353,8 @@ namespace Termo.API.Services
         #endregion
 
         #region ValidatePlayerCanPlay
-        public async Task<bool> CanPlayerPlay(string ipAdress, string playerName) {
-            var player = await GeneratePlayerIfNotExists(ipAdress, playerName);
+        public async Task<bool> CanPlayerPlay(string ipAdress) {
+            var player = await GeneratePlayerIfNotExists(ipAdress);
 
             var tries = await GetTriesOfPlayerToday(player);
 
@@ -368,7 +369,7 @@ namespace Termo.API.Services
             return true;
         }
 
-        public async Task<List<TryEntity>> GetTriesOfPlayerToday(PlayerEntity player) {
+        public async Task<List<AttemptEntity>> GetTriesOfPlayerToday(PlayerEntity player) {
             var tries = await _tryRepository.GetTriesByPlayerAndDate(player.Id, DateTime.UtcNow);
             return tries;
         }
@@ -376,7 +377,7 @@ namespace Termo.API.Services
 
         #region GetProgessActualPlayer
 
-        public async Task<List<Try>> GetTriesTodayPlyer(string ipAdress) {
+        public async Task<List<Attempt>> GetTriesTodayPlyer(string ipAdress) {
 
             var tries = await _tryRepository.GetTriesByPlayerIpAndDateOrderingByTryDate(ipAdress, DateTime.UtcNow);
 
@@ -385,7 +386,7 @@ namespace Termo.API.Services
             }
 
             var ret = tries.Select(x => {
-                return JsonConvert.DeserializeObject<Try>(x.JsonTry);
+                return JsonConvert.DeserializeObject<Attempt>(x.AttemptTry);
             }).ToList();
 
             return ret;

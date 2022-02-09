@@ -8,57 +8,57 @@ using Termo.Models.Interfaces;
 
 namespace Termo.Infrastructure.Repositories
 {
-    public class TryRepository : ITryRepository
+    public class AttemptRepository : IAttemptRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
-        public TryRepository(ApplicationDbContext dbContext)
+        public AttemptRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<List<TryEntity>> GetTriesByPlayer(int playerId)
+        public async Task<List<AttemptEntity>> GetTriesByPlayer(int playerId)
         {
             var playerTries = await _dbContext.Tries.Where(x => x.PlayerId == playerId).ToListAsync();
 
             return playerTries;
         }
 
-        public async Task<List<TryEntity>> GetTriesByPlayerAndDate(int playerId, DateTime tryDate)
+        public async Task<List<AttemptEntity>> GetTriesByPlayerAndDate(int playerId, DateTime tryDate)
         {
-            var playerTries = await _dbContext.Tries.Where(x => x.PlayerId == playerId && x.TryDate.Date == tryDate.AddHours(-3).Date).ToListAsync();
+            var playerTries = await _dbContext.Tries.Where(x => x.PlayerId == playerId && x.AttemptDate.Date == tryDate.AddHours(-3).Date).ToListAsync();
 
             return playerTries;
         }
 
-        public async Task<List<TryEntity>> GetTriesByPlayerIpAndDateOrderingByTryDate(string ipAdress, DateTime tryDate)
+        public async Task<List<AttemptEntity>> GetTriesByPlayerIpAndDateOrderingByTryDate(string ipAdress, DateTime tryDate)
         {
             var playerTries = await _dbContext.Tries
                 .Include(x => x.Player)
-                .Where(x => x.TryDate.Date == tryDate.AddHours(-3).Date && x.Player.IpAdress.Equals(ipAdress))
-                .OrderBy(x => x.TryDate)
+                .Where(x => x.AttemptDate.Date == tryDate.AddHours(-3).Date && x.Player.IpAdress.Equals(ipAdress))
+                .OrderBy(x => x.AttemptDate)
                 .ToListAsync();
 
             return playerTries;
         }
 
-        public List<IGrouping<DateTime, TryEntity>> GetTriesGroupedByTryDate()
+        public List<IGrouping<DateTime, AttemptEntity>> GetTriesGroupedByTryDate()
         {
             var playerTries = _dbContext.Tries
                 .AsNoTracking()
                 .AsEnumerable()
-                .GroupBy(x => x.TryDate)
+                .GroupBy(x => x.AttemptDate)
                 .ToList();
 
             return playerTries;
         }
 
-        public List<IGrouping<int, TryEntity>> GetTriesYesterday()
+        public List<IGrouping<int, AttemptEntity>> GetTriesYesterday()
         {
             var dateToCompare = DateTime.UtcNow.AddHours(-3).AddDays(-1);
 
             var playerTries = _dbContext.Tries
-                .Where(x => x.TryDate.Date == dateToCompare.Date)
+                .Where(x => x.AttemptDate.Date == dateToCompare.Date)
                 .AsNoTracking()
                 .AsEnumerable()
                 .GroupBy(x => x.PlayerId)
@@ -85,7 +85,7 @@ namespace Termo.Infrastructure.Repositories
             return retorno;
         }
 
-        public async Task Add(TryEntity tryEntity)
+        public async Task Add(AttemptEntity tryEntity)
         {
             await _dbContext.AddAsync(tryEntity);
             await _dbContext.SaveChangesAsync();

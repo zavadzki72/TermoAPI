@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using Termo.API.BackgroundServices;
 using Termo.Models;
+using Termo.Models.ViewModels;
 
 namespace Termo.API.Controllers
 {
@@ -42,34 +43,32 @@ namespace Termo.API.Controllers
 
         [HttpPost]
         [Route("ValidateWorld")]
-        public async Task<IActionResult> ValidateWorld(string worldReceived, string ipAdress, string playerName) {
+        public async Task<IActionResult> ValidateWorld([FromBody] ValidateWorldViewModel validateWorldViewModel) {
 
-            if(worldReceived.Length != 5) {
+            if(validateWorldViewModel.WorldReceived.Length != 5) {
                 return BadRequest(new {
                     Key = "WORLD_MUST_BE_FIVE_CARACTERS",
                     Message = "A palavra precisa ter 5 caracteres"
                 });
             }
 
-            if(!(await _worldService.VerifyIdWorldExists(worldReceived))) {
-                ProccessNewWorld(worldReceived);
+            if(!(await _worldService.VerifyIdWorldExists(validateWorldViewModel.WorldReceived))) {
+                ProccessNewWorld(validateWorldViewModel.WorldReceived);
 
                 return BadRequest(new {
                     Key = "WORLD_DOES_NOT_EXISTS",
-                    Message = $"A palavra: {worldReceived} nao existe no nosso banco de dados"
+                    Message = $"A palavra: {validateWorldViewModel.WorldReceived} nao existe no nosso banco de dados"
                 });
             }
 
-            if(!(await _worldService.CanPlayerPlay(ipAdress, playerName))){
+            if(!(await _worldService.CanPlayerPlay(validateWorldViewModel.IpAdress))){
                 return BadRequest(new {
                     Key = "PLAYER_NOT_CAN_PLAY",
-                    Message = $"O Jogador com o IP: {ipAdress} ja alcançou o numero maximo de tentativas"
+                    Message = $"O Jogador com o IP: {validateWorldViewModel.IpAdress} ja alcançou o numero maximo de tentativas"
                 });
             }
 
-
-
-            return Ok(await _worldService.ValidateWorld(worldReceived, ipAdress, playerName));
+            return Ok(await _worldService.ValidateWorld(validateWorldViewModel));
         }
 
         private void ProccessNewWorld(string world)

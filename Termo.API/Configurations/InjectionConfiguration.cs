@@ -25,7 +25,7 @@ namespace Termo.API.Configurations
         private static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IWorldRepository, WorldRepository>();
-            services.AddScoped<ITryRepository, TryRepository>();
+            services.AddScoped<IAttemptRepository, AttemptRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();
             services.AddScoped<IInvalidWorldRepository, InvalidWorldRepository>();
         }
